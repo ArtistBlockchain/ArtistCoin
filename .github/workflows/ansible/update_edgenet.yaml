@@ -1,0 +1,68 @@
+---
+-
+  name: Update ArtistCoin binary
+  hosts:
+    - all
+  become: yes
+  tasks:
+    ## update & upgrade system
+    - name: Update & upgrade system
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    ## stop artistcoin service
+    - name: Stop polygon edge service
+      systemd:
+        state: stopped
+        name: artistcoin
+
+    ## get the latest release
+    - name: Get latest release link
+      uri:
+        url: https://api.github.com/repos/ArtistBlockchain/ArtistCoin/releases/latest
+        return_content: true
+      register: edge_release
+
+    ## download the latest release
+    - name: Download latest ArtistCoin release
+      get_url:
+        url: "{{ edge_release.json.assets[3].browser_download_url }}"
+        dest: /tmp/artistcoin.tar.gz
+        force: yes
+
+    ## create temp dir for release
+    - name: Create temp dir for ArtistCoin release
+      file:
+        path: /tmp/artistcoin
+        state: directory
+
+    ## unpack release tar
+    - name: Unpack ArtistCoin release
+      unarchive:
+        remote_src: yes
+        src: /tmp/artistcoin.tar.gz
+        dest: /tmp/artistcoin
+
+    ## set artistcoin to PATH
+    - name: Place ArtistCoin binary to PATH
+      copy:
+        remote_src: yes
+        src: /tmp/artistcoin/artistcoin
+        dest: /usr/local/bin/
+        mode: a+x
+        force: yes
+
+    ## remove release temp dir
+    - name: Remove temp ArtistCoin release dir
+      file:
+        state: absent
+        path: /tmp/artistcoin
+
+    ## start polygon edge service
+    - name: Start artistcoin service
+      systemd:
+        state: restarted
+        name: artistcoin
+        daemon_reload: yes
+        enabled: yes
