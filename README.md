@@ -1,6 +1,6 @@
 ## Artistcoin
 * Name - ArtistCoin
-* Symbol - ATC
+* Symbol - ARTC
 * Supply - 1 billion
 * Blocktime - 3 seconds
 * Consensus - PoS
